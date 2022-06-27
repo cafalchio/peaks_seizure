@@ -40,10 +40,8 @@ def extract_df_value(value, PATH):
 
     if value[2] == "M":
         filename = os.path.join(PATH, "data\\Male_Rats", value[0])
-        # filename = PATH + '/Male_Rats/' + value[0]
     if value[2] == "F":
         filename = os.path.join(PATH, "data\\Female_Rats", value[0])
-        # filename = PATH + '/' + 'Female_Rats/' + value[0]
 
     treatments = pd.DataFrame(value[3:-2]).T
     treatments.columns = list(COLORS.keys())
@@ -100,7 +98,6 @@ class Dataset:
         """Downsample the data to a final sample of 250 samples/s"""
         factor = int(self.sf / 250)
         self.data = decimate(self.data, factor, ftype="fir")
-        # print(f'new sample rate {int(self.sf/factor)}')
         self.downsampled = True
         self.sf = int(self.sf / factor)
         return None
@@ -142,45 +139,36 @@ class Dataset:
     def get_peaks(self):
         """Find sample peaks"""
         w = 33
-        dist = 30
-        width = [40]
+        dist = 10
+        width = [10]
         f_data = savgol_filter(self.data.copy(), window_length=w, polyorder=1, deriv=0)
 
         peaks_neg = find_peaks(
             -f_data, height=self.meta["small_tresh"], width=width, distance=dist
         )[0]
-        # peaks_pos = find_peaks(f_data, height=self.meta['small_tresh'], width=[50],
-        #                        distance=dist)[0]
+
         return np.asarray(peaks_neg)
 
-    def find_last_min(self, minutes):
-        """Get the timestamps of the last 5 min of each treatment"""
-        # Update treatments to the end of treatments
-        treatments = list(self.meta["treatments"].values[0])
-        treatments.append(int(self.data.size / self.sf))  # add the last point
-        min = 60 * minutes
-        return [[id - min, id] for id in treatments[1:]]  # get the last time - minutes
-
-    def get_25_30_min(self):
-        pass
-
-    def peaks_minutes(self, treatment, minutes):
+    def peaks_minutes(self, treatment_name, minutes, extra=False):
         """return the peaks for specified time"""
-        t_times = self.treatment_start_end()
+        t_times = self.treatment_start_end() # should be in seconds
         peaks = self.get_peaks()
         results = []
-        for i, treats in enumerate(self.meta["treatments"].columns):
-            if treats == treatment:
-                print(treats)
+        for i, treat_name in enumerate(self.meta["treatments"].columns):
+            if treat_name == treatment_name:
+                print(treat_name)
                 treat_peaks = peaks[
                     (peaks > t_times[i][0] * self.sf)
                     & (peaks < t_times[i][1] * self.sf)
                 ]
-                tmp = np.array_split(
+                peaks_min = np.array_split(
                     treat_peaks, int((t_times[i][1] - t_times[i][0]) // 60)
                 )  # spliting peaks into all minutes in treatment interval
-                results.append([len(pks) for pks in tmp])  # get peaks/min
-                return sum(results[0][-minutes:]) / minutes
+                results = [len(pks) for pks in peaks_min]  # get peaks/min
+                if extra:  # Check if there is 2 intervals
+                    return sum(results[25:30]) / 5  # from 25-30 min
+                else:
+                    return sum(results[-minutes:]) / minutes  # last minutes
 
     def treatment_start_end(self):
 
@@ -192,15 +180,3 @@ class Dataset:
 
         return t_times
 
-
-# def calc_peak_amplitudes(self, w=50):
-
-#     # Better to calculate peaks pos and neg, pass filter and then amplitudes
-#     pos = []
-#     neg = []
-#     peaks_pos = self.data[self.peaks_pos]
-
-#     window = np.ones(w) / w
-#     pos = np.convolve(peaks_pos, window, "same")
-#     neg = np.convolve(peaks_neg, window, "same")
-#     return pos, neg
