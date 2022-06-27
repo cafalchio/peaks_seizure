@@ -1,0 +1,33 @@
+filename,Channel,Sex,Baseline,Fluorocitrate,R_KCN,Levetiracetam,Perampanel,Noise?,Details,Big_Noise_Threshold,Small_Peak_Threshold
+310322_001_M.smr,Ch2,M,260,1101,4714,8352,,,Cut file at 11953,1.00E+03,1.00E+02
+040422_000_M.smr,Ch2,M,440,730,4377,9057,,,Cut file at 10910,9.00E+02,8.00E+01
+050422_003_C.smr,Ch1,M,234,1166,4927,8360,10187,Some early and later noise.,Lots of single unit activity - potentially difficult to filter out.,8.00E+02,1.00E+02
+050422_003_C.smr,Ch2,M,234,1166,4927,8360,10187,Some early and later noise.,"100uM LEV, 1uM perampanel",1.00E+03,8.00E+01
+050422_000_M.smr,Ch2,M,1240,1997,5665,9208,11027,,"100uM LEV, 1uM perampanel",2.00E+03,6.00E+01
+060422_002_C.smr,Ch1,M,370,1406,5082,,,,Large ictal events diminished activity.,5.00E+03,6.00E+01
+060422_002_C.smr,Ch2,M,370,1406,5082,,,,Large ictal events diminished activity.,3.00E+03,8.00E+01
+060422_003_C.smr,Ch1,M,500,1348,5032,8626,10370,,"100uM LEV, 1uM perampanel",3.00E+03,6.00E+01
+060422_000_M.smr,Ch2,M,445,1161,4795,8423,10257,,"100uM LEV, 1uM perampanel",2.00E+03,5.00E+01
+060422_001_M.smr,Ch2,M,758,1196,4846,8438,10233,,"Quite small amplitude events. 100uM LEV, 1uM perampanel",4.00E+02,6.00E+01
+070422_001_C.smr,Ch1,M,293,1480,5107,8708,10573,,"100uM LEV, 3uM perampanel",1.00E+03,5.00E+01
+070422_001_C.smr,Ch2,M,293,1480,5107,8708,10573,,"100uM LEV, 3uM perampanel",9.00E+02,6.00E+01
+070422_001_M.smr,Ch2,M,300,1196,4802,10219,12012,,"Need to check file. 100uM LEV, 3uM perampanel",3.00E+03,6.00E+01
+040522_002_C.smr,Ch1,M,1600,1722,5367,,,,Need to check file. Large ictal event diminished activity. Noise at baseline so can't analyse.,1.00E+03,9.00E+01
+050522_000_M.smr,Ch2,M,100,920,4551,8068,9884,,"100uM LEV, 3uM perampanel",1.00E+03,4.00E+01
+100522_002_C.smr,Ch1,M,0,696.92,4348,,7602,,"3uM perampanel, Stop analysis at 9402,can only use first 30 mins perampanel treatment.",8.00E+02,6.00E+01
+100522_002_C.smr,Ch2,M,0,696.92,4348,,7602,,"3uM perampanel, Stop analysis at 9402,can only use first 30 mins perampanel treatment.",5.00E+02,1.00E+02
+110522_002_C.smr,Ch1,M,0,646,4296,,7848,,3uM perampanel,1.00E+03,6.00E+01
+110522_002_C.smr,Ch2,M,0,646,4296,,7848,,3uM perampanel,1.00E+03,7.00E+01
+110422_002_C.smr,Ch1,F,440,2021,5650,9200,,,Single unit activity. Cut file at 9199 (file stopped recording),1.00E+03,1.00E+02
+110422_002_C.smr,Ch2,F,440,2021,5650,9200,,,Single unit activity. Cut file at 9199 (file stopped recording),2.00E+03,1.00E+02
+120422_004_C.smr,Ch1,F,,,270,3840,5624,,"Recording stopped so can't analyse fluorocitrate data. 100uM LEV, 3uM perampanel",1.00E+03,7.00E+01
+140422_000_M.smr,Ch2,F,910,1488,5153,8780,10631,,"100uM LEV, 3uM perampanel",7.00E+03,6.00E+01
+190422_001_C.smr,Ch1,F,520,1181,4804,8390,10197,Some noise needs filtering out.,"100uM LEV, 3uM perampanel",1.00E+03,8.00E+01
+190422_001_C.smr,Ch2,F,520,1181,4804,8390,10197,Some noise needs filtering out.,"100uM LEV, 3uM perampanel",9.00E+02,6.00E+01
+190422_002_C.smr,Ch1,F,0,326,3991,,7528,,3uM Perampanel only.,1.00E+03,7.00E+01
+190422_002_C.smr,Ch2,F,0,326,3991,,7528,,3uM Perampanel only. Single unit activity,3.00E+02,4.00E+01
+200422_003_C.smr,Ch1,F,577,862,4474,,8071,Bubble trap noise,3uM Perampanel only. Single unit activity. ,1.00E+03,4.00E+01
+200422_003_C.smr,Ch2,F,577,862,4474,,8071,,3uM Perampanel only.,1.00E+03,5.00E+01
+200422_004_C.smr,Ch1,F,555,1061,4672,,8254,,3uM Perampanel only.,2.00E+03,5.00E+01
+200422_004_C.smr,Ch2,F,555,1061,4672,,8254,,3uM Perampanel only.,9.00E+02,6.00E+01
+200422_000_M.smr,Ch2,F,340,710,4342,,7987,,3uM Perampanel only. Lots of noise half way through recording.,1.00E+03,3.00E+01
