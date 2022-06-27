@@ -19,6 +19,9 @@ results = {
     "pk_min_RKCN": [],
     "pk_min_levi": [],
     "pk_min_pera": [],
+    "pk_min_RKCN_25_30": [],
+    "pk_min_levi_25_30": [],
+    "pk_min_pera_25_30": [],
     "sex": [],
 }
 
@@ -37,6 +40,9 @@ for i, value in enumerate(df.values):
     results["pk_min_RKCN"].append(dt.peaks_minutes("R_KCN", MINUTES))
     results["pk_min_levi"].append(dt.peaks_minutes("Levetiracetam", MINUTES))
     results["pk_min_pera"].append(dt.peaks_minutes("Perampanel", MINUTES))
+    results["pk_min_RKCN"].append(dt.peaks_minutes("R_KCN", MINUTES, extra=True))
+    results["pk_min_levi"].append(dt.peaks_minutes("Levetiracetam", MINUTES, extra=True))
+    results["pk_min_pera"].append(dt.peaks_minutes("Perampanel", MINUTES, extra=True))
     results["sex"].append(meta["sex"])
     # pplot(dt.get_data())
     # break
