@@ -40,10 +40,8 @@ def extract_df_value(value, PATH):
 
     if value[2] == "M":
         filename = os.path.join(PATH, "data\\Male_Rats", value[0])
-        # filename = PATH + '/Male_Rats/' + value[0]
     if value[2] == "F":
         filename = os.path.join(PATH, "data\\Female_Rats", value[0])
-        # filename = PATH + '/' + 'Female_Rats/' + value[0]
 
     treatments = pd.DataFrame(value[3:-2]).T
     treatments.columns = list(COLORS.keys())
@@ -82,6 +80,20 @@ class Dataset:
     def get_sample_rate(self):
         return self.sf
 
+    def get_treatments(self):
+        """Return a dataframe of treatments intervals"""
+        colors = list(self.meta["colors"].keys())
+        treatments = list(self.meta["treatments"].values[0])
+        treatments.append(int(self.data.size / self.sf))
+        t_times = []
+        columns = []
+        for i in range(0, len(treatments) - 1):  # get all intervals
+            t_times.append((int(treatments[i]), int(treatments[i + 1])))
+            columns.append(colors[i])
+        res = pd.DataFrame(t_times).T
+        res.columns = columns
+        return res
+
     def read_data(self):
         """Read Spike2 file"""
         print("Reading file:")
@@ -100,7 +112,6 @@ class Dataset:
         """Downsample the data to a final sample of 250 samples/s"""
         factor = int(self.sf / 250)
         self.data = decimate(self.data, factor, ftype="fir")
-        # print(f'new sample rate {int(self.sf/factor)}')
         self.downsampled = True
         self.sf = int(self.sf / factor)
         return None
@@ -142,65 +153,47 @@ class Dataset:
     def get_peaks(self):
         """Find sample peaks"""
         w = 33
-        dist = 30
-        width = [40]
+        dist = 10  # minimal dist in samples between peaks
+        width = [3]  # minimal width of a peak in samples
+        # smooth the data to avoid high frequency peaks (spikes)
         f_data = savgol_filter(self.data.copy(), window_length=w, polyorder=1, deriv=0)
 
         peaks_neg = find_peaks(
             -f_data, height=self.meta["small_tresh"], width=width, distance=dist
         )[0]
-        # peaks_pos = find_peaks(f_data, height=self.meta['small_tresh'], width=[50],
-        #                        distance=dist)[0]
+
         return np.asarray(peaks_neg)
 
-    def find_last_min(self, minutes):
-        """Get the timestamps of the last 5 min of each treatment"""
-        # Update treatments to the end of treatments
-        treatments = list(self.meta["treatments"].values[0])
-        treatments.append(int(self.data.size / self.sf))  # add the last point
-        min = 60 * minutes
-        return [[id - min, id] for id in treatments[1:]]  # get the last time - minutes
-
-    def get_25_30_min(self):
-        pass
-
-    def peaks_minutes(self, treatment, minutes):
+    def peaks_minutes(self, treatment_name, minutes, m25_30=False, m55_60=False):
         """return the peaks for specified time"""
-        t_times = self.treatment_start_end()
+        try:  # some files dont have all treatments
+            t_times = self.get_treatments()[treatment_name].values
+        except:
+            return None
         peaks = self.get_peaks()
-        results = []
-        for i, treats in enumerate(self.meta["treatments"].columns):
-            if treats == treatment:
-                print(treats)
-                treat_peaks = peaks[
-                    (peaks > t_times[i][0] * self.sf)
-                    & (peaks < t_times[i][1] * self.sf)
-                ]
-                tmp = np.array_split(
-                    treat_peaks, int((t_times[i][1] - t_times[i][0]) // 60)
-                )  # spliting peaks into all minutes in treatment interval
-                results.append([len(pks) for pks in tmp])  # get peaks/min
-                return sum(results[0][-minutes:]) / minutes
+        times_s = np.arange(t_times[0], t_times[1])  # get the interval between t0 - t1
+        times_m = np.array_split(
+            times_s, int((t_times[1] - t_times[0]) // 60)
+        )  # split times in 1 min
 
-    def treatment_start_end(self):
-
-        treatments = list(self.meta["treatments"].values[0])
-        treatments.append(int(self.data.size / self.sf))  # add the last point
-        t_times = []
-        for i in range(0, len(treatments) - 1):  # get all intervals
-            t_times.append((int(treatments[i]), int(treatments[i + 1])))
-
-        return t_times
-
-
-# def calc_peak_amplitudes(self, w=50):
-
-#     # Better to calculate peaks pos and neg, pass filter and then amplitudes
-#     pos = []
-#     neg = []
-#     peaks_pos = self.data[self.peaks_pos]
-
-#     window = np.ones(w) / w
-#     pos = np.convolve(peaks_pos, window, "same")
-#     neg = np.convolve(peaks_neg, window, "same")
-#     return pos, neg
+        if treatment_name == 'Baseline': # smaller then 5m baselines
+            if len(times_m) < 5:
+                minutes = len(t_times)
+        try:
+            if m25_30:
+                t = [times_m[24][0], times_m[29][-1]]
+            elif m55_60:
+                t = [times_m[54][0], times_m[59][-1]]
+            else:
+                 t = [times_m[-minutes][0], times_m[-1][-1]]
+        except:
+            # print(f"Maximum size: {len(times_m)}")
+            return None
+        peaks_min = (
+            len(
+                peaks[(peaks > t[0] * self.sf) & (peaks <= t[-1] * self.sf)]
+            )
+            / 5
+        )
+        # print(peaks_min)
+        return peaks_min
