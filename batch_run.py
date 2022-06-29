@@ -1,5 +1,5 @@
 from utils.utils import *
-from plots.plots import *
+# from plots.plots import *
 import pandas as pd
 
 # Configuration
@@ -56,5 +56,5 @@ for i, value in enumerate(df.values):
 #         print(f"Failed on: {meta['filename']}")
 print(f"RESULTS >>> {len(results)}")
 df_res = pd.DataFrame.from_dict(results)
-df_res.to_csv("peak_rate_5min_tresh.csv")
+# df_res.to_csv("peak_rate_5min_tresh.csv")
 print(df_res.head())
