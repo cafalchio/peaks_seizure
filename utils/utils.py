@@ -164,36 +164,42 @@ class Dataset:
 
         return np.asarray(peaks_neg)
 
-    def peaks_minutes(self, treatment_name, minutes, m25_30=False, m55_60=False):
+    def get_peaks_min(self, t, minutes):
+        peaks = self.get_peaks()
+        pk = (len(peaks[(peaks > t[0] * self.sf) & (peaks <= t[-1] * self.sf)]) / minutes)
+        print("Peaks per min: {pk}")
+        return pk
+
+    def peaks_minutes(self, treatment_name, minutes=5, m25_30=False, m55_60=False):
+
         """return the peaks for specified time"""
+        print(f'{treatment_name}')
         try:  # some files dont have all treatments
             t_times = self.get_treatments()[treatment_name].values
         except:
             return None
-        peaks = self.get_peaks()
         times_s = np.arange(t_times[0], t_times[1])  # get the interval between t0 - t1
         times_m = np.array_split(
             times_s, int((t_times[1] - t_times[0]) // 60)
         )  # split times in 1 min
+        if len(times_m) < 5:  # smaller then 5m return all
+            minutes = len(t_times)
 
-        if treatment_name == 'Baseline': # smaller then 5m baselines
-            if len(times_m) < 5:
-                minutes = len(t_times)
-        try:
-            if m25_30:
+        if m25_30:  # get the 25-30 min or the last minutes smaller 30
+            if len(times_m) >= 30:
                 t = [times_m[24][0], times_m[29][-1]]
-            elif m55_60:
-                t = [times_m[54][0], times_m[59][-1]]
+                return self.get_peaks_min(t, minutes)
             else:
-                 t = [times_m[-minutes][0], times_m[-1][-1]]
-        except:
-            # print(f"Maximum size: {len(times_m)}")
-            return None
-        peaks_min = (
-            len(
-                peaks[(peaks > t[0] * self.sf) & (peaks <= t[-1] * self.sf)]
-            )
-            / 5
-        )
-        # print(peaks_min)
-        return peaks_min
+                t = [times_m[-minutes][0], times_m[-1][-1]]
+                return self.get_peaks_min(t, minutes)
+
+        elif m55_60:  # get the 55-60 min or the last 5 smaller 60
+            if len(times_m) >= 60:
+                t = [times_m[54][0], times_m[59][-1]]
+                return self.get_peaks_min(t, minutes)
+            else:
+                t = [times_m[-minutes][0], times_m[-1][-1]]
+                return self.get_peaks_min(t, minutes)
+        else:
+            t = [times_m[-minutes][0], times_m[-1][-1]]
+            return self.get_peaks_min(t, minutes)
