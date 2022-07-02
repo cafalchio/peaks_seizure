@@ -2,6 +2,7 @@ import neo
 import numpy as np
 import pandas as pd
 from scipy.signal import decimate, find_peaks, savgol_filter
+from plots.plots import *
 import os
 
 ### Collection of class and function to load and preprocess data
@@ -40,8 +41,10 @@ def extract_df_value(value, PATH):
 
     if value[2] == "M":
         filename = os.path.join(PATH, "data\\Male_Rats", value[0])
-    if value[2] == "F":
+    elif value[2] == "F":
         filename = os.path.join(PATH, "data\\Female_Rats", value[0])
+    else: 
+        filename = os.path.join(PATH, "data\\Control_ACSF", value[0])
 
     treatments = pd.DataFrame(value[3:-2]).T
     treatments.columns = list(COLORS.keys())
@@ -69,14 +72,21 @@ class Dataset:
         if self.meta["big_tresh"]:
             print("Cleanning big tresh..")
             self.clean_noise(self.meta["big_tresh"])
-        # self.peak_neg = self.get_peaks()
+        self.base_stats = None
+        self.fluo_stats = None
+        self.r_KCN_stats = None
+        self.leve_stats = None
+        self.pera_stats = None
 
+    # @property
     def get_data(self):
         return self.data
 
+    # @property
     def get_peaks(self):
         return self.peak_neg
 
+    # @property
     def get_sample_rate(self):
         return self.sf
 
@@ -161,39 +171,91 @@ class Dataset:
         peaks_neg = find_peaks(
             -f_data, height=self.meta["small_tresh"], width=width, distance=dist
         )[0]
-
         return np.asarray(peaks_neg)
 
-    def peaks_minutes(self, treatment_name, minutes, m25_30=False, m55_60=False):
-        """return the peaks for specified time"""
+    def get_peaks_by_interval(self, t):
+        '''return the peaks around the interval t[0] to t[1]'''
+        peaks = self.get_peaks()
+        return peaks[(peaks > t[0] * self.sf) & (peaks <= t[-1] * self.sf)]
+
+    def get_peaks_min(self, t, minutes):
+        ''' Get the number of peaks per min'''
+        pks = self.get_peaks_by_interval(t)
+        return len(pks) / minutes
+
+    def calculate_amplitudes_mean_std(self, t,  stats="mean"):
+        """Calculate mean or Std amplitudes of peaks inside interval t"""
+        pk = self.get_peaks_by_interval(t)
+        if len(pk) == 0:
+            return 0
+        amp = self.data[pk]
+        if stats == "std":
+            return amp.std()
+        return amp.mean()
+
+    def get_treatment_in_minutes(self, treatment_name):
+        '''Get the entire treatment time split in minutes'''
+
         try:  # some files dont have all treatments
             t_times = self.get_treatments()[treatment_name].values
         except:
             return None
-        peaks = self.get_peaks()
         times_s = np.arange(t_times[0], t_times[1])  # get the interval between t0 - t1
-        times_m = np.array_split(
-            times_s, int((t_times[1] - t_times[0]) // 60)
-        )  # split times in 1 min
+        times_m = np.array_split(times_s, int((t_times[1] - t_times[0]) // 60))
+        return times_m
 
-        if treatment_name == 'Baseline': # smaller then 5m baselines
-            if len(times_m) < 5:
-                minutes = len(t_times)
-        try:
-            if m25_30:
-                t = [times_m[24][0], times_m[29][-1]]
-            elif m55_60:
-                t = [times_m[54][0], times_m[59][-1]]
-            else:
-                 t = [times_m[-minutes][0], times_m[-1][-1]]
-        except:
-            # print(f"Maximum size: {len(times_m)}")
+
+    def get_baseline_data(self, minutes=5, stats="mean"):
+        '''Get Baseline treatment peaks/min or mean amplitude or std on the minutes interval'''
+        times_m = self.get_treatment_in_minutes("Baseline")
+        if len(times_m) < 5:
+            t = [times_m[0][-1], times_m[-1][-1]]
+        else:
+            t = [times_m[-minutes][0], times_m[-1][-1]]
+
+        if stats:
+            return self.calculate_amplitudes_mean_std(t, stats)
+        
+        return self.get_peaks_min(t, minutes)        
+
+
+    def get_treatment_data(self, treatment, minutes, stats=None, time=""):
+        
+        times_m = self.get_treatment_in_minutes(treatment)
+        if times_m is None:
             return None
-        peaks_min = (
-            len(
-                peaks[(peaks > t[0] * self.sf) & (peaks <= t[-1] * self.sf)]
-            )
-            / 5
-        )
-        # print(peaks_min)
-        return peaks_min
+
+        if treatment == "Baseline":
+            return self.get_baseline_data(minutes=5, stats=stats)
+
+
+        times_m = self.get_treatment_in_minutes(treatment)
+        if time == "25_30":
+            if len(times_m) >= 30:
+                t = [times_m[24][0], times_m[29][-1]]
+                if stats:
+                    return self.calculate_amplitudes_mean_std(t, stats)
+                return self.get_peaks_min(t, minutes)
+            else:
+                t = [times_m[-minutes][0], times_m[-1][-1]]
+                if stats:
+                    return self.calculate_amplitudes_mean_std( t, stats)
+                return self.get_peaks_min(t, minutes)
+
+        elif time == "55_60":  # get the 55-60 min or the last 5 smaller 60
+            if len(times_m) >= 60:
+                t = [times_m[54][0], times_m[59][-1]]
+                if stats:
+                    return self.calculate_amplitudes_mean_std( t, stats)
+                return self.get_peaks_min(t, minutes)
+            else:
+                t = [times_m[-minutes][0], times_m[-1][-1]]
+                if stats:
+                    return self.calculate_amplitudes_mean_std(t, stats)
+                return self.get_peaks_min(t, minutes)
+
+        else:
+            t = [times_m[-minutes][0], times_m[-1][-1]]
+            if stats:
+                return self.calculate_amplitudes_mean_std( t, stats)
+            return self.get_peaks_min(t, minutes)
